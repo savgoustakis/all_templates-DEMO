@@ -1,0 +1,91 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: compute_required_network_peers
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceType:
+      type: string
+      enum:
+      - compute.googleapis.com/Network
+      default: compute.googleapis.com/Network
+      description: >
+        Resource type that the template can apply to, for informational purpose only.
+    requiredPairs:
+      type: array
+      items:
+        type: object
+        properties:
+          network:
+            description: >
+              Network URL in regex, following RE2 syntax (https://github.com/google/re2/wiki/Syntax).
+              An example URL: https://www.googleapis.com/compute/v1/projects/myproject/global/networks/mynet.
+            type: string
+          peers:
+            description: Required peer network URLs in regex.
+            type: array
+            items:
+              type: string
+    findingProperties:
+      description: >
+        Properties attached to the findings when a violation is detected.
+      type: object
+      properties:
+        explanation:
+          description: Explanation for the finding.
+          type: string
+        recommendation:
+          description: Recommendation for remediating the finding.
+          type: string
+        severity:
+          description: Severity level of the finding.
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+        version:
+          description: Version of the finding corresponding to the instance.
+          type: string
+
+validator:
+  productions:
+  - match: rule.requiredPairs.size() > 100
+    message: >
+      max allowed pairs exceeded. consider creating a sperate instance for the rest.
+  - match: rule.requiredPairs.exists(p, p.peers.size() > 10)
+    message: >
+      max allowed peers exceeded. consider creating a sperate entry for the rest.
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.computeNetwork
+  terms:
+    requrired_pairs_exist: >
+      rule.requiredPairs.all(pair,
+        !network.selfLink.matches(pair.network) ||
+        pair.peers.all(peer,
+          network.peerings.exists(p, p.network.matches(peer))
+        )
+      )
+  productions:
+  - match: >
+      !requrired_pairs_exist
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

@@ -1,0 +1,19 @@
+kind: iam_allowed_member
+config:
+  resourceTypes:
+  - cloudresourcemanager.googleapis.com/Organization
+  - cloudresourcemanager.googleapis.com/Folder
+  - cloudresourcemanager.googleapis.com/Project
+  memberType: "user"
+  domains:
+  - "google.com"
+  - "prod.google.com"
+  emails:
+  - "zuck@gmail.com"
+  findingProperties:
+    explanation: >-
+      Only allow company users and contractors to have IAM permissions.
+    recommendation: >-
+      Remove IAM policy bindings for users which are not allowed.
+    severity: "HIGH"
+    version: "a.b.c"

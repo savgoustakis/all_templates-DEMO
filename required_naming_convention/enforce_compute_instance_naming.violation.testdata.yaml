@@ -1,0 +1,9 @@
+test_data:
+- asset:
+    resource: //compute.googleapis.com/projects/myproject/zones/us-central1-a/instances/instance0
+    resource_data:
+      name: gcp-vm-macos-v0
+- asset:
+    resource: //compute.googleapis.com/projects/myproject/zones/us-central1-a/instances/instance1
+    resource_data:
+      name: aws-ec2-linux-v1

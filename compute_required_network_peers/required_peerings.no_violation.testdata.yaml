@@ -1,0 +1,15 @@
+test_data:
+- asset:
+    resource: //compute.googleapis.com/projects/projecta/global/networks/default
+    resource_data:
+      selfLink: 'https://www.googleapis.com/compute/v1/projects/projecta/global/networks/default'
+      peerings:
+      - network: 'https://www.googleapis.com/compute/v1/projects/projectb/global/networks/shared'
+      - network: 'https://www.googleapis.com/compute/v1/projects/projectb/global/networks/shared2'
+- asset:
+    resource: //compute.googleapis.com/projects/projectc/global/networks/default
+    resource_data:
+      selfLink: 'https://www.googleapis.com/compute/v1/projects/projectc/global/networks/default'
+      peerings:
+      - network: 'https://www.googleapis.com/compute/v1/projects/projectc/global/networks/shared'
+      - network: 'https://www.googleapis.com/compute/v1/projects/projectb/global/networks/shared2'

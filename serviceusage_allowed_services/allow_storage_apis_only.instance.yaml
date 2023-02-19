@@ -1,0 +1,16 @@
+kind: serviceusage_allowed_services
+config:
+  mode: "allow"
+  services:
+  - storage-api.googleapis.com
+  - bigquery.googleapis.com
+  - bigquery-json.googleapis.com
+  - sql-component.googleapis.com
+  - spanner.googleapis.com
+  findingProperties:
+    explanation: >-
+      Only allow storage related APIs to be enabled.
+    recommendation: >-
+      Disable the API in violation.
+    severity: "LOW"
+    version: "0.01"

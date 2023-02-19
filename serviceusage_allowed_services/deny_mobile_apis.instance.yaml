@@ -1,0 +1,13 @@
+kind: serviceusage_allowed_services
+config:
+  mode: "deny"
+  services:
+  - gameservices.googleapis.com
+  - firebase.googleapis.com
+  findingProperties:
+    explanation: >-
+      Services not related to the business should not be enabled.
+    recommendation: >-
+      Disable the API in violation.
+    severity: "LOW"
+    version: "0.01"

@@ -1,0 +1,5 @@
+test_data:
+- asset:
+    resource: //cloudfunctions.googleapis.com/projects/myproject/locations/us-central1/functions/func1
+    resource_data:
+      ingressSettings: "ALLOW_INTERNAL_ONLY"

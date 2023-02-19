@@ -1,0 +1,16 @@
+test_data:
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/organizations/myorg
+    iam_policy_data:
+      bindings:
+      - role: "roles/viewer"
+        members:
+        - "user:alice@google.com"
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/folders/myfolder
+    asset_type: cloudresourcemanager.googleapis.com/Folder
+    iam_policy_data:
+      bindings:
+      - role: "roles/owner"
+        members:
+        - "user:alice@google.com"

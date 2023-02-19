@@ -1,0 +1,11 @@
+test_data:
+- asset:
+    resource: "//serviceusage.googleapis.com/projects/123/services/storage-api.googleapis.com"
+    resource_data:
+      name: "storage-api.googleapis.com"
+      state: "ENABLED"
+- asset:
+    resource: "//serviceusage.googleapis.com/projects/123/services/spanner.googleapis.com"
+    resource_data:
+      name: "spanner.googleapis.com"
+      state: "ENABLED"

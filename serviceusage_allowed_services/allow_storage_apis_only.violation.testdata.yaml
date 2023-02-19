@@ -1,0 +1,6 @@
+test_data:
+- asset:
+    resource: "//serviceusage.googleapis.com/projects/123/services/source.googleapis.com"
+    resource_data:
+      name:  "source.googleapis.com"
+      state: "ENABLED"

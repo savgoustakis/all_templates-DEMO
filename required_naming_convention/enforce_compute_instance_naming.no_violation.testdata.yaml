@@ -1,0 +1,9 @@
+test_data:
+- asset:
+    resource: //compute.googleapis.com/projects/myproject/zones/us-central1-a/instances/instance0
+    resource_data:
+      name: gcp-vm-windows-test-v100
+- asset:
+    resource: //compute.googleapis.com/projects/myproject/zones/us-central1-a/instances/instance1
+    resource_data:
+      name: gcp-vm-linux-v1

@@ -1,0 +1,6 @@
+test_data:
+- asset:
+    resource: //cloudfunctions.googleapis.com/projects/myproject/locations/us-central1/functions/func1
+    asset_type: cloudfunctions.googleapis.com/CloudFunction
+    resource_data:
+      vpcConnectorEgressSettings: "ALL_TRAFFIC"

@@ -1,0 +1,9 @@
+test_data:
+- asset:
+    resource: //cloudfunctions.googleapis.com/projects/myproject/locations/us-central1/functions/func1
+    resource_data:
+      ingressSettings: "ALLOW_ALL"
+- asset:
+    resource: //cloudfunctions.googleapis.com/projects/myproject/locations/us-central1/functions/func2
+    resource_data:
+      ingressSettings: "ALLOW_INTERNAL_AND_GCLB"

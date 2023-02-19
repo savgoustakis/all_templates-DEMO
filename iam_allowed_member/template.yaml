@@ -1,0 +1,105 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: iam_allowed_member
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceTypes:
+      type: array
+      items:
+        type: string
+        enum:
+        - bigquery.googleapis.com/Dataset
+        - cloudfunctions.googleapis.com/CloudFunction
+        - cloudkms.googleapis.com/KeyRing
+        - cloudkms.googleapis.com/CryptoKey
+        - cloudkms.googleapis.com/ImportJob
+        - storage.googleapis.com/Bucket
+        - compute.googleapis.com/Disk
+        - compute.googleapis.com/Image
+        - compute.googleapis.com/Instance
+        - compute.googleapis.com/RegionDisk
+        - compute.googleapis.com/Snapshot
+        - compute.googleapis.com/Subnetwork
+        - cloudresourcemanager.googleapis.com/Folder
+        - cloudresourcemanager.googleapis.com/Organization
+        - cloudresourcemanager.googleapis.com/Project
+      description: >
+        Resource types that the template can apply to.
+    memberType:
+      description: >
+        Applicable IAM policy member types, e.g. user, serviceAccount, domain.
+        See https://cloud.google.com/iam/docs/reference/rest/v1/Policy for all.
+      type: string
+      default: "user"
+    domains:
+      description: >
+        Domains to allow, e.g. gmail.com.
+      type: array
+      items:
+        type: string
+    emails:
+      description: >
+        Emails to allow, e.g. alice@gmail.com.
+      type: array
+      items:
+        type: string
+    findingProperties:
+      type: object
+      description: >
+        Properties attached to the findings when a violation is detected.
+      properties:
+        explanation:
+          type: string
+          description: Explanation for the finding.
+        recommendation:
+          type: string
+          description: Recommendation for remediating the finding.
+        severity:
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+          description: Severity level of the finding.
+        version:
+          type: string
+          description: Version of the finding corresponding to the instance.
+
+validator:
+  productions:
+  - match: size(rule.domains) == 0 && size(rule.emails) == 0
+    message: "must specify at least one domain or one email"
+  - match: size(rule.resourceTypes) == 0
+    message: "must specify at least one resource type"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.iamPolicy
+  productions:
+  - match: >
+      !policy.bindings.all(binding,
+        binding.members.all(m,
+          !m.startsWith(rule.memberType + ":") ||
+          rule.emails.exists(e, m == rule.memberType + ":" + e) ||
+          rule.domains.exists(d, m.endsWith("@" + d))
+        )
+      )
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

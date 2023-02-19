@@ -1,0 +1,153 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: compute_restricted_firewall_rules
+  namespace: organizations/*
+schema:
+  type: object
+  description: >
+    A violation will be raised if the firewall matches the specified properties.
+  properties:
+    resourceType:
+      type: string
+      enum:
+      - compute.googleapis.com/Firewall
+      default: compute.googleapis.com/Firewall
+      description: >
+        Resource type that the template can apply to, for informational purpose only.
+    direction:
+      description: >
+        Direction of the rules to restrict. If unspecified, both are a match.
+      type: string
+      enum: ["INGRESS", "EGRESS"]
+    ruleType:
+      description: Type of the rules to restrict. If unspecified, both are checked.
+      type: string
+      enum: ["allowed", "denied"]
+    protocol:
+      description: >
+        The IP protocol to restrict, in regex, following RE2 syntax
+        (https://github.com/google/re2/wiki/Syntax).
+      type: string
+      default: '.*'
+    port:
+      description: >
+        The port range to restrict. Firewall rules with a port NOT fully
+        covered by the low-high range is a match.
+        Ports matching all ports for a given protocol are considered to have a
+        range of [0, 65535].
+        Valid values are:
+        * a single number, e.g. '22'.
+        * a range, e.g. '22-25': firewall rules with a range greater or equal
+          to the range would match.
+        * 'all': the rule matches all ports for a given protocol.
+        * unspecified: any port would match.
+      type: string
+    sourceRange:
+      description: >
+        Source range to restrict, in regex, following RE2 syntax
+        (https://github.com/google/re2/wiki/Syntax).
+      type: string
+      default: ".*"
+    destinationRange:
+      description: >
+        Destination range to restrict, in regex, following RE2
+        syntax (https://github.com/google/re2/wiki/Syntax).
+      type: string
+      default: ".*"
+    findingProperties:
+      description: >
+        Properties attached to the findings when a violation is detected.
+      type: object
+      properties:
+        explanation:
+          description: Explanation for the finding.
+          type: string
+        recommendation:
+          description: Recommendation for remediating the finding.
+          type: string
+        severity:
+          description: Severity level of the finding.
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+        version:
+          description: Version of the finding corresponding to the instance.
+          type: string
+
+validator:
+  terms:
+    invalid_range: >
+      has(rule.port) && rule.port != "all" && (
+        rangeLow(rule.port) < 0
+        || rangeHigh(rule.port) > 65535
+        || rangeLow(rule.port) > rangeHigh(rule.port))
+  productions:
+  - match: has(rule.direction) && rule.direction != "INGRESS" && rule.direction != "EGRESS"
+    message: "invalid direction"
+  - match: has(rule.ruleType) && rule.ruleType != "allowed" && rule.ruleType != "denied"
+    message: "invalid ruleType"
+  - match: invalid_range
+    message: "invalid port. allowed port range is [0, 65535]"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.computeFirewall
+  terms:
+    in_scope: firewall.disabled == false
+    direction_match: >
+      !has(rule.direction) || rule.direction == firewall.direction
+    source_range_match: >
+      !has(firewall.sourceRanges)
+        || firewall.sourceRanges.exists(sr, sr.matches(rule.sourceRange))
+    destination_range_match: >
+      !has(firewall.destinationRanges)
+        || firewall.destinationRanges.exists(dr, dr.matches(rule.destinationRange))
+    allowed: >
+      has(firewall.allowed) ? firewall.allowed : []
+    denied: >
+      has(firewall.denied) ? firewall.denied : []
+    firewall_rules: >
+      rule.ruleType == "allowed" ?
+        allowed
+        : rule.ruleType == "denied" ?
+          denied
+          : allowed + denied
+    firewall_rules_match_protocols: >
+      firewall_rules.filter(r, r.IPProtocol.matches(rule.protocol))
+    portLow: >
+      (!has(rule.port) || rule.port == "all") ? 0 : rangeLow(rule.port)
+    portHigh: >
+      (!has(rule.port) || rule.port == "all") ? 65535 : rangeHigh(rule.port)
+    firewall_rules_match_ports: >
+      !has(rule.port) ||
+      (rule.port == "all" && firewall_rules_match_protocols.exists(r,
+        !has(r.ports) || r.ports.exists(port, port == "0-65535"))) ||
+      (rule.port == "0-65535" && firewall_rules_match_protocols.exists(r, !has(r.ports))) ||
+      firewall_rules_match_protocols.exists(r, r.ports.exists(port,
+        rangeLow(port) <= portLow && rangeHigh(port) >= portHigh))
+  productions:
+  - match: >
+      in_scope
+      && direction_match
+      && source_range_match
+      && destination_range_match
+      && firewall_rules_match_ports
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

@@ -1,0 +1,11 @@
+# ensures cloud functions only allow PRIVATE_RANGES_ONLY egress settings.
+kind: cloudfunction_allowed_vpc_connector_egress_settings
+config:
+  allowedVpcConnectorEgressSettings: ["PRIVATE_RANGES_ONLY"]
+  findingProperties:
+    explanation: >-
+      Only allow egress traffic from private ranges.
+    recommendation: >-
+      Change VPC connector egress settings to "PRIVATE_RANGES_ONLY"
+    severity: "LOW"
+    version: "v1alpha1"

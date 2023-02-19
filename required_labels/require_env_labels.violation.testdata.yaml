@@ -1,0 +1,16 @@
+test_data:
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/invalid_value
+    resource_data:
+      labels:
+        env: autopush
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/invalid_value2
+    resource_data:
+      labels:
+        env: devtesting
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/missing_label
+    resource_data:
+      labels:
+        department: finance

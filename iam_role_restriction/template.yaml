@@ -1,0 +1,117 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: iam_role_restriction
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceTypes:
+      type: array
+      items:
+        type: string
+        enum:
+        - bigquery.googleapis.com/Dataset
+        - cloudfunctions.googleapis.com/CloudFunction
+        - cloudkms.googleapis.com/KeyRing
+        - cloudkms.googleapis.com/CryptoKey
+        - cloudkms.googleapis.com/ImportJob
+        - storage.googleapis.com/Bucket
+        - compute.googleapis.com/Disk
+        - compute.googleapis.com/Image
+        - compute.googleapis.com/Instance
+        - compute.googleapis.com/RegionDisk
+        - compute.googleapis.com/Snapshot
+        - compute.googleapis.com/Subnetwork
+        - cloudresourcemanager.googleapis.com/Folder
+        - cloudresourcemanager.googleapis.com/Organization
+        - cloudresourcemanager.googleapis.com/Project
+      description: >
+        Resource types that the template can apply to.
+    mode:
+      description: >
+        String identifying the operational mode, allow or deny.
+        In the allow mode, for the given role, only members specified are allowed.
+        In the deny mode, for the given role, if there exists a member that
+        match the specified members, a violation will be raised.
+      type: string
+      enum: ["allow", "deny"]
+      default: "allow"
+    role:
+      description: >
+        The role to restrict bindings for. Regex following RE2 syntax
+        (https://github.com/google/re2/wiki/Syntax) is supported.
+        e.g. "roles/owner", ".*" for all roles.
+      type: string
+      default: ".*"
+    members:
+      description: >
+        Members to either allow or deny for the given role. Regex following
+        RE2 syntax (https://github.com/google/re2/wiki/Syntax) is supported.
+        e.g. "user:.*@google.com" for anyone under the "google" domain.
+      type: array
+      items:
+        type: string
+    findingProperties:
+      type: object
+      description: >
+        Properties attached to the findings when a violation is detected.
+      properties:
+        explanation:
+          type: string
+          description: Explanation for the finding.
+        recommendation:
+          type: string
+          description: Recommendation for remediating the finding.
+        severity:
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+          description: Severity level of the finding.
+        version:
+          type: string
+          description: Version of the finding corresponding to the instance.
+
+validator:
+  productions:
+  - match: rule.resourceTypes.size() == 0
+    message: "must specify at least one resource type"
+  - match: rule.members.size() == 0
+    message: "must specify at least one member"
+  - match: rule.mode != "allow" && rule.mode != "deny"
+    message: "invalid mode"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.iamPolicy
+  terms:
+    allow_violation: >
+      rule.mode == 'allow' &&
+      policy.bindings.exists(binding,
+        binding.role.matches(rule.role) &&
+        binding.members.exists(m, !rule.members.exists(rm, m.matches(rm))))
+    deny_violation: >
+      rule.mode == 'deny' &&
+      policy.bindings.exists(binding,
+        binding.role.matches(rule.role) &&
+        binding.members.exists(m, rule.members.exists(rm, m.matches(rm))))
+  productions:
+  - match: allow_violation || deny_violation
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

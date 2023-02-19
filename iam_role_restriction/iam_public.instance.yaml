@@ -1,0 +1,21 @@
+kind: iam_role_restriction
+config:
+  resourceTypes:
+  - cloudresourcemanager.googleapis.com/Organization
+  - cloudresourcemanager.googleapis.com/Folder
+  - cloudresourcemanager.googleapis.com/Project
+  - storage.googleapis.com/Bucket
+  - bigquery.googleapis.com/Dataset
+  - compute.googleapis.com/Image
+  mode: "deny"
+  role: "roles/.*"
+  members:
+  - "allUsers"
+  - "allAuthenticatedUsers"
+  findingProperties:
+    explanation: >-
+      No IAM roles should be granted to "allUsers" or "allAuthenticatedUsers".
+    recommendation: >-
+      Remove "allUsers" and "allAuthenticatedUsers" from the member list.
+    severity: "HIGH"
+    version: "0.1"

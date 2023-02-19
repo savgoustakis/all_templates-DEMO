@@ -1,0 +1,23 @@
+test_data:
+- asset:
+    resource: //cloudkms.googleapis.com/projects/myproject/locations/global/keyRings/myring/cryptoKeys/long_next_rotation_time
+    resource_data:
+      nextRotationTime:  '2030-10-05T12:00:55.192645Z'
+      primary:
+        state: 'ENABLED'
+      purpose: 'ENCRYPT_DECRYPT'
+      rotationPeriod: '1000h'
+- asset:
+    resource: //cloudkms.googleapis.com/projects/myproject/locations/global/keyRings/myring/cryptoKeys/long_rotation_period
+    resource_data:
+      nextRotationTime:  '2020-12-05T12:00:55.192645Z'
+      primary:
+        state: 'ENABLED'
+      purpose: 'ENCRYPT_DECRYPT'
+      rotationPeriod: '5000h'
+- asset:
+    resource: //cloudkms.googleapis.com/projects/myproject/locations/global/keyRings/myring/cryptoKeys/never_rotate
+    resource_data:
+      primary:
+        state: 'ENABLED'
+      purpose: 'ENCRYPT_DECRYPT'

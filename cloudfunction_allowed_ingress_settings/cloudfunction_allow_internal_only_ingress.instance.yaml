@@ -1,0 +1,11 @@
+# ensures cloud functions only allow internal only ingress settings.
+kind: cloudfunction_allowed_ingress_settings
+config:
+  allowedIngressSettings: ["ALLOW_INTERNAL_ONLY"]
+  findingProperties:
+    explanation: >-
+      Only allow internal ingress traffic.
+    recommendation: >-
+      Change ingress settings to "ALLOW_INTERNAL_ONLY"
+    severity: "LOW"
+    version: "v1alpha1"

@@ -1,0 +1,21 @@
+test_data:
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/public_viewer_role
+    iam_policy_data:
+      bindings:
+      - role: "roles/viewer"
+        members:
+        - "user:alice@google.com"
+        - "allUsers"
+      - role: "roles/editor"
+        members:
+        - "serviceAccount:service-123@compute-system.iam.gserviceaccount.com"
+        - "user:alice@google.com"
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/public_owner_role
+    iam_policy_data:
+      bindings:
+      - role: "roles/owner"
+        members:
+        - "user:alice@google.com"
+        - "allAuthenticatedUsers"

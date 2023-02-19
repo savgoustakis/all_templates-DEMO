@@ -1,0 +1,73 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: sql_allowed_public_ips
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceType:
+      type: string
+      enum:
+      - sqladmin.googleapis.com/Instance
+      default: sqladmin.googleapis.com/Instance
+      description: >
+        Resource type that the template can apply to, for informational purpose only.
+    allowedIPs:
+      type: array
+      items:
+        type: string
+    findingProperties:
+      type: object
+      description: >
+        Properties attached to the findings when a violation is detected.
+      properties:
+        explanation:
+          type: string
+          description: Explanation for the finding.
+        recommendation:
+          type: string
+          description: Recommendation for remediating the finding.
+        severity:
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+          description: Severity level of the finding.
+        version:
+          type: string
+          description: Version of the finding corresponding to the instance.
+
+validator:
+  productions:
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.sqladminInstance
+  terms:
+    in_scope: >
+      sqlInstance.instanceType == "CLOUD_SQL_INSTANCE"
+      && sqlInstance.backendType == "SECOND_GEN"
+      && sqlInstance.settings.ipConfiguration.ipv4Enabled
+    all_ips_allowed: >
+      sqlInstance.ipAddresses.all(ip, ip.type != "PRIMARY"
+        || rule.allowedIPs.exists(allowedIP, allowedIP == ip.ipAddress))
+  productions:
+  - match: in_scope && !all_ips_allowed
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

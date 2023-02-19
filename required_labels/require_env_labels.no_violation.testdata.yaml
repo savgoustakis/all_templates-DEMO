@@ -1,0 +1,12 @@
+test_data:
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/myproject
+    resource_data:
+      labels:
+        env: dev
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/myproject
+    resource_data:
+      labels:
+        env: staging
+        department: finance

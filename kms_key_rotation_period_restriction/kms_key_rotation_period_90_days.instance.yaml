@@ -1,0 +1,16 @@
+# ensures KMS crypto keys have a rotation period less than 90days
+kind: kms_key_rotation_period_restriction
+config:
+  rotationPeriod: 2160h
+  findingProperties:
+    explanation: >-
+      Regular key rotation helps provide protection against compromised keys,
+      and limits the number of encrypted messages available to cryptanalysis
+      for a specific key version.
+      Learn more at: https://cloud.google.com/kms/docs/rotating-keys
+    recommendation: >-
+      Go to https://console.cloud.google.com/security/kms, click the key-ring
+      that contains the key, click the key, click "Edit rotation period", and
+      set the rotation period to at most 90 days.
+    severity: "HIGH"
+    version: "v1alpha1"

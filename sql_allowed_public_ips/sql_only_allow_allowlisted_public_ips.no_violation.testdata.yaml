@@ -1,0 +1,34 @@
+test_data:
+- asset:
+    resource: //cloudsql.googleapis.com/projects/myproject/instances/allowlistedIP
+    resource_data:
+      instanceType: "CLOUD_SQL_INSTANCE"
+      backendType: "SECOND_GEN"
+      settings:
+        ipConfiguration:
+          ipv4Enabled: true
+      ipAddresses:
+      - ipAddress: "35.224.162.201"
+        type: "PRIMARY"
+- asset:
+    resource: //cloudsql.googleapis.com/projects/myproject/instances/replica
+    resource_data:
+      instanceType: "READ_REPLICA_INSTANCE"
+      backendType: "SECOND_GEN"
+      settings:
+        ipConfiguration:
+          ipv4Enabled: true
+      ipAddresses:
+      - ipAddress: "1.1.1.1"
+        type: "PRIMARY"
+- asset:
+    resource: //cloudsql.googleapis.com/projects/myproject/instances/privateIP
+    resource_data:
+      instanceType: "CLOUD_SQL_INSTANCE"
+      backendType: "SECOND_GEN"
+      settings:
+        ipConfiguration:
+          ipv4Enabled: true
+      ipAddresses:
+      - ipAddress: "1.1.1.1"
+        type: "PRIVATE"

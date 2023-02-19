@@ -1,0 +1,75 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: cloudfunction_allowed_vpc_connector_egress_settings
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceType:
+      type: string
+      enum:
+      - cloudfunctions.googleapis.com/CloudFunction
+      default: cloudfunctions.googleapis.com/CloudFunction
+      description: >
+        Resource type that the template can apply to, for informational purpose only.
+    allowedVpcConnectorEgressSettings:
+      type: array
+      items:
+        type: string
+        enum:
+        - "PRIVATE_RANGES_ONLY"
+        - "ALL_TRAFFIC"
+    findingProperties:
+      type: object
+      description: >
+        Properties attached to the findings when a violation is detected.
+      properties:
+        explanation:
+          type: string
+          description: Explanation for the finding.
+        recommendation:
+          type: string
+          description: Recommendation for remediating the finding.
+        severity:
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+          description: Severity level of the finding.
+        version:
+          type: string
+          description: Version of the finding corresponding to the instance.
+
+validator:
+  productions:
+  - match: rule.allowedVpcConnectorEgressSettings.size() == 0
+    message: "must specify at least one allowed VPC connector egress setting"
+  - match: >
+      !(rule.allowedVpcConnectorEgressSettings.all(rt, rt in ["PRIVATE_RANGES_ONLY", "ALL_TRAFFIC"]))
+    message: "invalid allowedVpcConnectorEgressSettings"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.cloudfunctionsCloudFunction
+  productions:
+  - match: >
+      has(cloudFunction.vpcConnectorEgressSettings) &&
+      !rule.allowedVpcConnectorEgressSettings.exists(s, s == cloudFunction.vpcConnectorEgressSettings)
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

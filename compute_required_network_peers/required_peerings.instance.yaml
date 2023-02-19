@@ -1,0 +1,19 @@
+kind: compute_required_network_peers
+config:
+  requiredPairs:
+  - network: 'https://www.googleapis.com/compute/v1/projects/projecta/global/networks/default$'
+    peers:
+    - 'https://www.googleapis.com/compute/v1/projects/projectb/global/networks/shared$'
+  - network: 'https://www.googleapis.com/compute/v1/projects/projectc/'
+    peers:
+    - 'https://www.googleapis.com/compute/v1/projects/projectc/'
+  findingProperties:
+    explanation: >-
+      Require that a VPC is peered with certain required peers. This is to
+      ensure that a network scanner can scan a VM and timely discover potential
+      network service vulnerabilities.
+    recommendation: >-
+      Follow the instructions in https://cloud.google.com/vpc/docs/using-vpc-peering
+      to create required VPC network peers.
+    severity: "MEDIUM"
+    version: "0.1"

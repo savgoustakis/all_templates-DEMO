@@ -1,0 +1,16 @@
+kind: iam_role_restriction
+config:
+  resourceTypes:
+  - cloudresourcemanager.googleapis.com/Organization
+  - cloudresourcemanager.googleapis.com/Folder
+  - cloudresourcemanager.googleapis.com/Project
+  mode: "deny"
+  role: "roles/(owner|editor|viewer)"
+  members: [".*"]
+  findingProperties:
+    explanation: >-
+      Basic IAM roles are too broad and should not be used.
+    recommendation: >-
+      Remove basic roels.
+    severity: "MEDIUM"
+    version: "0.1"

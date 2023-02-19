@@ -1,0 +1,15 @@
+test_data:
+- asset:
+    resource: //compute.googleapis.com/projects/projecta/global/firewalls/rule
+    resource_data:
+      direction: "INGRESS"
+      disabled: false
+      sourceRanges: ["0.0.0.0/0"]
+- asset:
+    resource: //compute.googleapis.com/projects/projecta/global/firewalls/rule1
+    resource_data:
+      allowed:
+      - IPProtocol: "udp"
+      direction: "INGRESS"
+      disabled: false
+      sourceRanges: ["34.106.242.147/32", "0.0.0.0/0"]

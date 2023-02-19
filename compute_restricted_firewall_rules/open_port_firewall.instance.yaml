@@ -1,0 +1,14 @@
+kind: compute_restricted_firewall_rules
+config:
+  direction: "INGRESS"
+  ruleType: "allowed"
+  protocol: "tcp|udp"
+  port: "all"
+  findingProperties:
+    explanation: >-
+      Firewall rules that allow connections on all ports may expose resources
+      to attackers.
+    recommendation: >-
+      Restrict the firewall rules.
+    severity: "HIGH"
+    version: "0.1"

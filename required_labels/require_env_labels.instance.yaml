@@ -1,0 +1,24 @@
+# ensures that resources have `env` labels
+kind: required_labels
+config:
+  resourceTypes:
+  - cloudfunctions.googleapis.com/CloudFunction
+  - cloudresourcemanager.googleapis.com/Folder
+  - cloudresourcemanager.googleapis.com/Organization
+  - cloudresourcemanager.googleapis.com/Project
+  - storage.googleapis.com/Bucket
+  - compute.googleapis.com/Instance
+  - compute.googleapis.com/Image
+  - compute.googleapis.com/Disk
+  - compute.googleapis.com/Snapshot
+  - container.googleapis.com/Cluster
+  labels:
+  - key: env
+    value: ^(dev|staging|prod)$
+  findingProperties:
+    explanation: >-
+      All resources are required to have an "env" label.
+    recommendation: >-
+      Add an "env" label to the resource, with a value of "dev", "staging", or "prod".
+    severity: "HIGH"
+    version: "0.1"

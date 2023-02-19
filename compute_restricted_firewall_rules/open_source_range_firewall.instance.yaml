@@ -1,0 +1,13 @@
+kind: compute_restricted_firewall_rules
+config:
+  direction: "INGRESS"
+  ruleType: "allowed"
+  sourceRange: "^0.0.0.0/0$"
+  findingProperties:
+    explanation: >-
+      Firewall rules that allow connections from all IP addresses may expose
+      resources to attackers.
+    recommendation: >-
+      Restrict the firewall rules.
+    severity: "HIGH"
+    version: "0.1"

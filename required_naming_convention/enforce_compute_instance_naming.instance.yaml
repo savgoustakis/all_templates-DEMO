@@ -1,0 +1,15 @@
+# ensures that resources follow a naming pattern
+kind: required_naming_convention
+config:
+  resourceTypes:
+  - compute.googleapis.com/Instance
+  patterns:
+  - "^gcp-vm-(linux|windows)-v\\d+$"
+  - "^gcp-vm-(linux|windows)-test-v\\d+$"
+  findingProperties:
+    explanation: >-
+      All compute intances are required to follow a naming pattern.
+    recommendation: >-
+      Delete the instance and recreate one that follows the naming pattern.
+    severity: "LOW"
+    version: "0.1"

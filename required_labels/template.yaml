@@ -1,0 +1,105 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: required_labels
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceTypes:
+      description: >
+        Resource types that the template applies to.
+      type: array
+      items:
+        type: string
+        enum:
+        - bigquery.googleapis.com/Dataset
+        - bigquery.googleapis.com/Table
+        - cloudfunctions.googleapis.com/CloudFunction
+        - cloudkms.googleapis.com/CryptoKey
+        - cloudresourcemanager.googleapis.com/Folder
+        - cloudresourcemanager.googleapis.com/Organization
+        - cloudresourcemanager.googleapis.com/Project
+        - compute.googleapis.com/Disk
+        - compute.googleapis.com/Image
+        - compute.googleapis.com/Instance
+        - compute.googleapis.com/Snapshot
+        - container.googleapis.com/Cluster
+        - dataproc.googleapis.com/Cluster
+        - dns.googleapis.com/ManagedZone
+        - storage.googleapis.com/Bucket
+    labels:
+      description: >
+        A list of <key, value> label pairs to check for on the resource.
+        A violation will be raised if a resource misses any of the labels.
+      type: array
+      items:
+        type: object
+        properties:
+          key:
+            description: >
+              The label key to check.
+            type: string
+          value:
+            description: >
+              The label value to check. It should be a regex expression
+              following RE2 syntax (https://github.com/google/re2/wiki/Syntax).
+              Defaults to any value.
+            type: string
+            default: '.*'
+    findingProperties:
+      description: >
+        Properties attached to the findings when a violation is detected.
+      type: object
+      properties:
+        explanation:
+          description: Explanation for the finding.
+          type: string
+        recommendation:
+          description: Recommendation for remediating the finding.
+          type: string
+        severity:
+          description: Severity level of the finding.
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+        version:
+          description: Version of the finding corresponding to the instance.
+          type: string
+
+validator:
+  productions:
+  - match: size(rule.labels) == 0
+    message: "must specify at least one label"
+  - match: size(rule.resourceTypes) == 0
+    message: "must specify at least one resource type"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.commonAttributes
+  terms:
+    has_all_labels: >
+      rule.labels.all(l,
+        l.key in resource.labels &&
+        resource.labels[l.key].matches(l.value))
+  productions:
+  - match: >
+      !has_all_labels
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

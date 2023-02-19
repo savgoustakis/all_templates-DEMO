@@ -1,0 +1,6 @@
+test_data:
+- asset:
+    resource: "//serviceusage.googleapis.com/projects/123/services/firebase.googleapis.com"
+    resource_data:
+      name:  "firebase.googleapis.com"
+      state: "ENABLED"

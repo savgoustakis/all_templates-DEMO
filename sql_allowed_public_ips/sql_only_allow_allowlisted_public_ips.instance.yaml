@@ -1,0 +1,12 @@
+kind: sql_allowed_public_ips
+config:
+  allowedIPs:
+  - "35.224.162.201"
+  findingProperties:
+    explanation: >-
+      Only allowlisted public IPs are allowed.
+    recommendation: >-
+      Configure a prviate IP instead, following
+      https://cloud.google.com/sql/docs/mysql/configure-private-ip
+    severity: "HIGH"
+    version: "v1alpha1"

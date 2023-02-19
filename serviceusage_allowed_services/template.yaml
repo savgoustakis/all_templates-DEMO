@@ -1,0 +1,85 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: serviceusage_allowed_services
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceType:
+      type: string
+      enum:
+      - serviceusage.googleapis.com/Service
+      default: serviceusage.googleapis.com/Service
+      description: >
+        Resource type that the template can apply to, for informational purpose only.
+    mode:
+      description: >
+        String identifying the operational mode, allow or deny.
+        In the allow mode, only specified services are allowed to be enabled.
+        In the deny mode, the specified services are not allowed to be enabled.
+      type: string
+      enum: ["allow", "deny"]
+      default: "allow"
+    services:
+      description: APIs to check, e.g compute.googleapis.com
+      type: array
+      items:
+        type: string
+    findingProperties:
+      type: object
+      description: >
+        Properties attached to the findings when a violation is detected.
+      properties:
+        explanation:
+          type: string
+          description: Explanation for the finding.
+        recommendation:
+          type: string
+          description: Recommendation for remediating the finding.
+        severity:
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+          description: Severity level of the finding.
+        version:
+          type: string
+          description: Version of the finding corresponding to the instance.
+
+validator:
+  productions:
+  - match: rule.mode != "allow" && rule.mode != "deny"
+    message: "invalid mode"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.serviceusageService
+  terms:
+    allowed_violation: >
+      rule.mode == 'allow' &&
+      service.state == "ENABLED" &&
+      !(rule.services.exists(s, s == service.name))
+    deny_violation: >
+      rule.mode == 'deny' &&
+      service.state == "ENABLED" &&
+      rule.services.exists(s, s == service.name)
+  productions:
+  - match: allowed_violation || deny_violation
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

@@ -1,0 +1,107 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha2
+kind: PolicyTemplate
+metadata:
+  name: required_naming_convention
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    resourceTypes:
+      description: >
+        Resource types that the template applies to.
+      type: array
+      items:
+        type: string
+        enum:
+        - cloudfunctions.googleapis.com/CloudFunction
+        - cloudkms.googleapis.com/CryptoKey
+        - cloudkms.googleapis.com/KeyRing
+        - cloudresourcemanager.googleapis.com/Project
+        - compute.googleapis.com/Address
+        - compute.googleapis.com/Autoscaler
+        - compute.googleapis.com/Disk
+        - compute.googleapis.com/Firewall
+        - compute.googleapis.com/ForwardingRule
+        - compute.googleapis.com/GlobalForwardingRule
+        - compute.googleapis.com/HealthCheck
+        - compute.googleapis.com/Image
+        - compute.googleapis.com/Instance
+        - compute.googleapis.com/InstanceGroup
+        - compute.googleapis.com/Network
+        - compute.googleapis.com/NetworkEndpointGroup
+        - compute.googleapis.com/Project
+        - compute.googleapis.com/RegionBackendService
+        - compute.googleapis.com/Snapshot
+        - compute.googleapis.com/SslCertificate
+        - compute.googleapis.com/SslPolicy
+        - compute.googleapis.com/Subnetwork
+        - compute.googleapis.com/TargetHttpProxy
+        - compute.googleapis.com/TargetHttpsProxy
+        - compute.googleapis.com/TargetSslProxy
+        - compute.googleapis.com/UrlMap
+        - container.googleapis.com/Cluster
+        - dns.googleapis.com/ManagedZone
+        - logging.googleapis.com/LogMetric
+        - logging.googleapis.com/LogSink
+        - sqladmin.googleapis.com/Instance
+        - storage.googleapis.com/Bucket
+    patterns:
+      description: >
+        Name patterns in regex, following RE2 syntax
+        (https://github.com/google/re2/wiki/Syntax).
+      type: array
+      items:
+        type: string
+    findingProperties:
+      description: >
+        Properties attached to the findings when a violation is detected.
+      type: object
+      properties:
+        explanation:
+          description: Explanation for the finding.
+          type: string
+        recommendation:
+          description: Recommendation for remediating the finding.
+          type: string
+        severity:
+          description: Severity level of the finding.
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+        version:
+          description: Version of the finding corresponding to the instance.
+          type: string
+
+validator:
+  productions:
+  - match: size(rule.patterns) == 0
+    message: "must specify a non-empty name"
+  - match: size(rule.resourceTypes) == 0
+    message: "must specify at least one resource type"
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.commonAttributes
+  terms:
+    match_pattern: rule.patterns.exists(p, resource.name.matches(p))
+  productions:
+  - match: >
+      !match_pattern
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

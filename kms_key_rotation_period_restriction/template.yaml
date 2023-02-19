@@ -1,0 +1,87 @@
+apiVersion: securitycenter.googleapis.com/settings/v1alpha1
+kind: PolicyTemplate
+metadata:
+  name: kms_key_rotation_period_restriction
+  namespace: organizations/*
+schema:
+  type: object
+  properties:
+    rotationPeriod:
+      format: google-duration
+      type: string
+      description: >
+        Period to advance the next_rotation_time when the service
+        automatically rotates a key.
+    resourceType:
+      type: string
+      enum:
+      - "cloudkms.googleapis.com/CryptoKey"
+      default: "cloudkms.googleapis.com/CryptoKey"
+      description: >
+        Resource type that the template can apply to, for informational purpose only.
+    findingProperties:
+      type: object
+      description: >
+        Properties attached to the findings when a violation is detected.
+      properties:
+        explanation:
+          type: string
+          description: Explanation for the finding.
+        recommendation:
+          type: string
+          description: Recommendation for remediating the finding.
+        severity:
+          type: string
+          enum:
+          - "LOW"
+          - "MEDIUM"
+          - "HIGH"
+          - "CRITICAL"
+          default: "MEDIUM"
+          description: Severity level of the finding.
+        version:
+          type: string
+          description: Version of the finding corresponding to the instance.
+
+validator:
+  terms:
+    hundred_years_in_hour: 100 * 365 * 24
+  productions:
+  - match: rule.rotationPeriod.getHours() < 24
+    message: "rotation period must be at least 24 hours."
+  - match: rule.rotationPeriod.getHours() > hundred_years_in_hour
+    message: "rotation period must be less than 100 years."
+  - match: >
+      !(rule.findingProperties.severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    message: "invalid findingProperties.severity"
+  - match: rule.findingProperties.explanation.size() > 1000
+    message: "findingProperties.explanation must have fewer than 1000 characters"
+  - match: rule.findingProperties.recommendation.size() > 1000
+    message: "findingProperties.recommendation must have fewer than 1000 characters"
+  - match: rule.findingProperties.version.size() > 100
+    message: "findingProperties.version must have fewer than 100 characters"
+
+evaluator:
+  environment: sha.v1alpha1.cloudkmsCryptoKey
+  terms:
+    is_for_encryption: cryptoKey.purpose == 'ENCRYPT_DECRYPT'
+    is_primary_state_enabled: cryptoKey.primary.state == 'ENABLED'
+    contains_rotation_period: has(cryptoKey.rotationPeriod)
+    is_rotation_period_beyond_limit: >
+      duration(cryptoKey.rotationPeriod) > rule.rotationPeriod
+    is_current_key_beyond_limit: >
+      timestamp(cryptoKey.nextRotationTime) > now + rule.rotationPeriod
+  productions:
+  - match: >
+      is_for_encryption
+      && is_primary_state_enabled
+      && (
+        !contains_rotation_period
+        || is_rotation_period_beyond_limit
+        || is_current_key_beyond_limit)
+    decision: sha.v1alpha1.violation
+    output:
+      details:
+        template: template.name
+        instance: instance.name
+        findingProperties: rule.findingProperties

@@ -1,0 +1,9 @@
+test_data:
+- asset:
+    resource: //cloudfunctions.googleapis.com/projects/myproject/locations/us-central1/functions/func1
+    resource_data:
+      vpcConnectorEgressSettings: "PRIVATE_RANGES_ONLY"
+- asset:
+    resource: //cloudfunctions.googleapis.com/projects/myproject/locations/us-central1/functions/func-no-vpc-connector
+    resource_data:
+      buildId: "someid"

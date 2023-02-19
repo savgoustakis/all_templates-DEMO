@@ -1,0 +1,17 @@
+test_data:
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/myproject
+    iam_policy_data:
+      bindings:
+      - role: "roles/viewer"
+        members:
+        - "serviceAccount:service-123@compute-system.iam.gserviceaccount.com"
+        - "user:alice@facebook.com"
+- asset:
+    resource: //cloudresourcemanager.googleapis.com/projects/myproject2
+    iam_policy_data:
+      bindings:
+      - role: "roles/owner"
+        members:
+        - "serviceAccount:service-123@compute-system.iam.gserviceaccount.com"
+        - "user:alice@gmail.com"
